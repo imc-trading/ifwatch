@@ -1,0 +1,13 @@
+[Unit]
+Description=Listen to netlink events for network interfaces and publish it to etcd
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/sysconfig/ifwatch
+User=root
+Group=root
+ExecStart=/usr/bin/ifwatch daemon $OPTIONS
+
+[Install]
+WantedBy=multi-user.target

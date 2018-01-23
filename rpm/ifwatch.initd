@@ -1,0 +1,74 @@
+#!/bin/sh
+#
+# chkconfig: - 90 04
+#
+# description: Listen to netlink events for network interfaces and publish it to etcd
+# processname: ifwatch
+# config: /etc/sysconfig/ifwatch
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+[ -f /etc/sysconfig/logwatch ] && . /etc/sysconfig/ifwatch
+
+PROG="ifwatch"
+LOCKFILE="/var/lock/subsys/ifwatch"
+LOGFILE="/var/log/ifwatch.log"
+OPTIONS="${OPTIONS}"
+
+start () {
+    echo -n $"Starting ${PROG}: "
+    daemon nohup ${PROG} ${OPTIONS} &>${LOGFILE} &
+    RETVAL=$?
+    echo
+    if [ ${RETVAL} = 0 ]; then
+        success
+        touch ${LOCKFILE}
+    else
+        failure
+    fi
+    return 0
+}
+
+stop () {
+    echo -n $"Stopping ${PROG}: "
+    killproc ${PROG}
+    RETVAL=$?
+    echo
+    [ ${RETVAL} = 0 ] && rm -f ${LOCKFILE}
+    return 0
+}
+
+restart() {
+    stop
+    start
+}
+
+case $1 in
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    restart)
+        restart
+    ;;
+    condrestart)
+        if [ -f ${LOCKFILE} ]; then
+            stop
+            sleep 3
+            start
+        fi
+        ;;
+    status)
+        status -l $(basename ${LOCKFILE}) ${PROG}
+        RETVAL=$?
+    ;;
+    *)
+
+    echo $"Usage: $PROG {start|stop|restart|status}"
+    exit 2
+esac
+
+exit $RETVAL
