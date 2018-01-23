@@ -127,7 +127,7 @@ Needs to run as root if you want module info.
 Generate refresh event, useful for testing or if use Kafka as backend where events have a TTL.
 
 ```bash
-./ifwatch refresh --backend kafka --brokers kafka1.njl3.trading.imc.intra:9092,kafka2.njl3.trading.imc.intra:9092,kafka3.njl3.trading.imc.intra:9092,kafka4.njl3.trading.imc.intra:9092,kafka5.njl3.trading.imc.intra:9092
+./ifwatch refresh --backend kafka --brokers kafka1:9092,kafka2:9092,kafka3:9092
 ```
 
 <a name="build-rpm"/>
