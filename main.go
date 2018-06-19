@@ -9,7 +9,7 @@ import (
 	"github.com/imc-trading/ifwatch/cmd"
 )
 
-const version = "0.2.9"
+const version = "0.3.0"
 
 func main() {
 	usage := `ifwatch
