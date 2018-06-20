@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -64,6 +65,8 @@ Options:
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	fmt.Printf("%+v\n", args)
 
 	if args["--endpoints"] == nil {
 		args["--endpoints"] = os.Getenv("IFWATCH_ENDPOINTS")

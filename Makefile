@@ -11,11 +11,11 @@ clean:
 	rm -rf $(BUILD)
 
 deps:
-	mkdir -p ${GOPATH}/src/google.golang.org
-	git clone -b v1.5.x https://github.com/grpc/grpc-go ${GOPATH}/src/google.golang.org/grpc
-	mkdir -p ${GOPATH}/src/github.com
-	git clone -b release-3.2 https://github.com/coreos/etcd ${GOPATH}/src/github.com/coreos/etcd
-	go get .
+#	mkdir -p ${GOPATH}/src/google.golang.org
+#	git clone -b v1.5.x https://github.com/grpc/grpc-go ${GOPATH}/src/google.golang.org/grpc
+#	mkdir -p ${GOPATH}/src/github.com
+#	git clone -b release-3.2 https://github.com/coreos/etcd ${GOPATH}/src/github.com/coreos/etcd
+	go get ./...
 
 build: clean
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
