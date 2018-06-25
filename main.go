@@ -10,7 +10,7 @@ import (
 	"github.com/imc-trading/ifwatch/cmd"
 )
 
-const version = "0.3.1"
+const version = "0.3.2"
 
 func main() {
 	usage := `ifwatch
@@ -65,8 +65,6 @@ Options:
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	fmt.Printf("%+v\n", args)
 
 	if args["--endpoints"] == nil {
 		args["--endpoints"] = os.Getenv("IFWATCH_ENDPOINTS")
