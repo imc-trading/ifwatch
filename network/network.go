@@ -7,9 +7,9 @@ import (
 
 	"github.com/mickep76/log"
 
-	"github.com/imc-trading/ifwatch/ethtool"
 	"github.com/imc-trading/ifwatch/module"
 	"github.com/imc-trading/ifwatch/netlink"
+	"github.com/safchain/ethtool"
 )
 
 // Interface provides information about system network interfaces.
