@@ -4,5 +4,4 @@ type Backend int
 
 const (
 	Kafka = Backend(iota)
-	Etcd
 )

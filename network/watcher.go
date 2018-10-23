@@ -1,4 +1,4 @@
-package netx
+package network
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/mickep76/netlink"
+	"github.com/imc-trading/ifwatch/netlink"
 )
 
 // Flag for event type

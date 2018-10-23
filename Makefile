@@ -1,32 +1,47 @@
 NAME=ifwatch
-SRC=github.com/imc-trading/ifwatch
-BUILD=.build
-VER=$(shell awk -F '"' '/const version =/ {print $$2}' main.go)
-REL=$(shell date -u +%Y%m%d%H%M)
+VER=0.0.1
+REL=1
+SRC=$(shell glide name)
 
 all: build
 
-clean:
-	rm -f $(NAME) $(NAME)*.rpm
-	rm -rf $(BUILD)
-
 deps:
-#	mkdir -p ${GOPATH}/src/google.golang.org
-#	git clone -b v1.5.x https://github.com/grpc/grpc-go ${GOPATH}/src/google.golang.org/grpc
-#	mkdir -p ${GOPATH}/src/github.com
-#	git clone -b release-3.2 https://github.com/coreos/etcd ${GOPATH}/src/github.com/coreos/etcd
-	go get ./...
+	go get -u golang.org/x/lint/golint
+	go get -u github.com/kisielk/errcheck
+	go get -u github.com/Masterminds/glide/...
 
-build: clean
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
+proto:
+	protoc -I network/ network/network.proto --go_out=plugins=grpc:network/
 
-build-rpm:
-	docker pull mickep76/centos-golang:latest >/dev/null
-	docker run --rm -v "$${TEAMCITY_BUILD_CHECKOUTDIR:-$$PWD}":/go/src/$(SRC) -w /go/src/$(SRC) mickep76/centos-golang:latest rpmbuild
+clean:
+	rm -f $(NAME) $(NAME)-*.rpm $(NAME)-*.tar.gz $(NAME).1 $(NAME).toml.5
+	which docker &>/dev/null && docker rm $(NAME) || true
 
-rpmbuild: deps build
-	mkdir -p $(BUILD)/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-	cp -r $(NAME) rpm $(BUILD)/SOURCES
-	sed -e "s/%NAME%/$(NAME)/g" -e "s/%VERSION%/$(VER)/g" -e "s/%RELEASE%/$(REL)/g" rpm/$(NAME).spec >$(BUILD)/SPECS/$(NAME).spec
-	rpmbuild -vv -bb --target="x86_64" --clean --define "_topdir $$(pwd)/$(BUILD)" $(BUILD)/SPECS/$(NAME).spec
-	mv $(BUILD)/RPMS/x86_64/*.rpm .
+format:
+	gofmt -w .
+
+test: format
+	golint -set_exit_status .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go vet .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 errcheck .
+#	go test . -v -covermode=atomic
+
+man:
+	pandoc man/${NAME}.1.md -s -t man -o ${NAME}.1
+	pandoc man/${NAME}.toml.5.md -s -t man -o ${NAME}.toml.5
+
+build:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$(VER)"
+
+rpm: clean
+	tar -czf $(NAME)-$(VER)-$(REL).tar.gz .
+	docker build --pull=true \
+		--build-arg NAME=$(NAME) \
+		--build-arg VER=$(VER) \
+		--build-arg REL=$(REL) \
+		--build-arg SRC=$(SRC) -t $(NAME):latest .
+	cid=$$(docker create -ti --name $(NAME) $(NAME):latest true) ;\
+	docker cp $$cid:/root/rpmbuild/RPMS/x86_64/$(NAME)-$(VER)-$(REL).x86_64.rpm . ;\
+	docker cp $$cid:/root/rpmbuild/SRPMS/$(NAME)-$(VER)-$(REL).src.rpm .
+
+.PHONY: all deps proto clean format test man build linux rpm
