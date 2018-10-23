@@ -8,7 +8,15 @@ ifwatch
 
 # SYNOPSIS
 
-**ifwatch** [**-h**] [**-version**] [**-conf** *CONFIGFILE*] [**-print-conf**]
+**ifwatch** [**-h**] [**--version**] [**-conf** *CONFIGFILE*] [**-print-conf**]
+
+**ifwatch** [**-conf** *CONFIGFILE*] print [**-h**] [**-json**]
+
+**ifwatch** [**-conf** *CONFIGFILE*] publish [**-h**]
+
+**ifwatch** [**-conf** *CONFIGFILE*] subscribe [**-h**] [**-json**] [**-host** *HOST*] [*INTERFACE*...]
+
+**ifwatch** [**-conf** *CONFIGFILE*] history [**-h**] [**-json**] [**-host** *HOST*] [*INTERFACE*...]
 
 # DESCRIPTION
 
@@ -17,16 +25,41 @@ ifwatch
 # OPTIONS
 
 **-h**, **-help**
-:	Display a help message.
+: Display a help message.
 
 **-version**
-:       Print version.
+: Print version.
 
-**-conf**
-:	Configuration file, defaults to /etc/directord.toml.
+**-conf** *CONFIGFILE*
+: Configuration file, defaults to /etc/directord.toml.
 
 **-print-conf**
-:	Print configuration.
+: Print configuration.
+
+**-json**
+: Print as JSON.
+
+**-host**
+: Filter by hostname.
+
+# COMMAND
+
+**print**
+: Print network interfaces.
+
+**publish**
+: Publish events to Kafka.
+
+**subscribe**
+: Subscribe to and print events from Kafka.
+
+**history**
+: Show events history from Kafka.
+
+# POSITIONAL ARGUMENTS
+
+*INTERFACE*...
+: Filter by interface(s).
 
 # FILES
 

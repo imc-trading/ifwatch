@@ -8,18 +8,18 @@ ifwatch.toml - configuration file for ifwatch
 
 # MAIN SECTION
 
-**LogLevel**
+**logLevel**
 : Only print same or higher log level debug, info, warning, error or fatal.
 
 ```
-LogLevel = "error"
+logLevel = "error"
 ```
 
-**LogNoColor**
+**logNoColor**
 : Log with no color.
 
 ```
-LogNoColor = true
+logNoColor = true
 ```
 
 **logNoDate**
@@ -67,8 +67,8 @@ timeout = 3
 # EXAMPLE
 
 ```
-LogLevel = "error"
-LogNoColor = true
+logLevel = "error"
+logNoColor = true
 logNoDate = true
 brokers = ["kafka1", "kafka2", "kafka3"]
 ```
