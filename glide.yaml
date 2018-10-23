@@ -1,0 +1,16 @@
+package: github.com/imc-trading/ifwatch
+import:
+- package: github.com/Shopify/sarama
+- package: github.com/mickep76/color
+- package: github.com/mickep76/encoding
+  subpackages:
+  - json
+  - toml
+- package: github.com/mickep76/go-difflib
+  subpackages:
+  - difflib
+- package: github.com/mickep76/log
+- package: github.com/safchain/ethtool
+- package: golang.org/x/sys
+  subpackages:
+  - unix
