@@ -1,7 +1,5 @@
 package main
 
-// Limit number of concurrent netlink calls otherwise will exchaust avail. open files
-
 import (
 	"flag"
 	"fmt"
