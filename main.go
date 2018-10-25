@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	logf "log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,8 +73,6 @@ Options:
 		c.Print()
 		os.Exit(0)
 	}
-
-	log.SetFlags(logf.LstdFlags | logf.Lshortfile)
 
 	// Log no color.
 	if c.LogNoColor {
