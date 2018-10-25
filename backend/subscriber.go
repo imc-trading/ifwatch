@@ -8,5 +8,4 @@ type Subscriber interface {
 	Stop() error
 	AddHandler(MessageHandler)
 	Versions(string, MessageHandler) error
-	Keys() ([]string, error)
 }

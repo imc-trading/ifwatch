@@ -1,5 +1,0 @@
-# /etc/sysconfig/ifwatch
-
-# Additional runtime options.
-# OPTIONS="--endpoint etcd1:2379"
-OPTIONS=
