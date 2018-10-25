@@ -1,15 +1,21 @@
 package main
 
+// Limit number of concurrent netlink calls otherwise will exchaust avail. open files
+
 import (
 	"flag"
 	"fmt"
+	logf "log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/mickep76/log"
 
-	"github.com/imc-trading/ifwatch/command"
+	"github.com/imc-trading/ifwatch/command/history"
+	"github.com/imc-trading/ifwatch/command/print"
+	"github.com/imc-trading/ifwatch/command/publish"
+	"github.com/imc-trading/ifwatch/command/subscribe"
 	"github.com/imc-trading/ifwatch/config"
 )
 
@@ -69,6 +75,8 @@ Options:
 		os.Exit(0)
 	}
 
+	log.SetFlags(logf.LstdFlags | logf.Lshortfile)
+
 	// Log no color.
 	if c.LogNoColor {
 		log.NoColor()
@@ -90,13 +98,13 @@ Options:
 	var err error
 	switch flag.Args()[0] {
 	case "print":
-		err = command.Print(c, flag.Args()[1:])
+		err = print.Print(c, flag.Args()[1:])
 	case "publish":
-		err = command.Publish(c, flag.Args()[1:])
+		err = publish.Publish(c, flag.Args()[1:])
 	case "subscribe":
-		command.Subscribe(c, flag.Args()[1:])
+		subscribe.Subscribe(c, flag.Args()[1:])
 	case "history":
-		command.History(c, flag.Args()[1:])
+		history.History(c, flag.Args()[1:])
 	}
 	if err != nil {
 		log.Fatal(err)

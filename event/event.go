@@ -1,4 +1,4 @@
-package command
+package event
 
 import (
 	"time"
@@ -9,9 +9,11 @@ import (
 type EventType string
 
 const (
-	ActionAdd    = EventType("add")
-	ActionModify = EventType("modify")
-	ActionDelete = EventType("delete")
+	ActionAdd         = EventType("add")
+	ActionModify      = EventType("modify")
+	ActionDelete      = EventType("delete")
+	ActionLimitStop   = EventType("limit-stop")
+	ActionLimitResume = EventType("limit-resume")
 )
 
 type Event struct {

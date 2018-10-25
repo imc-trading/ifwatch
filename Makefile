@@ -1,7 +1,7 @@
 NAME=ifwatch
 VER=0.0.1
 REL=1
-SRC=$(shell glide name)
+SRC=github.com/imc-trading/ifwatch
 
 all: build
 
@@ -34,7 +34,7 @@ build:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$(VER)"
 
 rpm: clean
-	tar -czf $(NAME)-$(VER)-$(REL).tar.gz .
+	tar -czf $(NAME)-$(VER)-$(REL).tar.gz --exclude $(NAME)-$(VER)-$(REL).tar.gz . || true
 	docker build --pull=true \
 		--build-arg NAME=$(NAME) \
 		--build-arg VER=$(VER) \

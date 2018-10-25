@@ -1,16 +1,31 @@
 package: github.com/imc-trading/ifwatch
 import:
 - package: github.com/Shopify/sarama
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
 - package: github.com/mickep76/color
+- package: github.com/mickep76/compress
+  subpackages:
+  - gzip
+  - lzw
+  - snappy
+  - xz
+  - zlib
 - package: github.com/mickep76/encoding
   subpackages:
   - json
   - toml
-- package: github.com/mickep76/go-difflib
+- package: github.com/mickep76/log
+- package: github.com/pkg/errors
+- package: github.com/safchain/ethtool
+- package: gitlab.trading.imc.intra/go/go-difflib
   subpackages:
   - difflib
-- package: github.com/mickep76/log
-- package: github.com/safchain/ethtool
+- package: golang.org/x/net
+  subpackages:
+  - context
 - package: golang.org/x/sys
   subpackages:
   - unix
+- package: google.golang.org/grpc

@@ -1,10 +1,10 @@
 package netlink
 
 import (
-	"fmt"
 	"os"
 	"syscall"
 
+	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
 )
 
@@ -33,7 +33,7 @@ func Dial(family int, groups uint32) (*Conn, error) {
 		family,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("dial: %v", err)
+		return nil, errors.Wrap(err, "dial netlink socket")
 	}
 
 	return &Conn{
@@ -52,13 +52,13 @@ func (c *Conn) Bind() error {
 
 	if err := unix.Bind(c.FileDescr, c.SocketAddr); err != nil {
 		_ = c.Close()
-		return fmt.Errorf("bind: %v", err)
+		return errors.Wrap(err, "bind to netlink socket")
 	}
 
 	sa, err := unix.Getsockname(c.FileDescr)
 	if err != nil {
 		_ = c.Close()
-		return fmt.Errorf("getsockname: %v", err)
+		return errors.Wrap(err, "getsockname")
 	}
 
 	c.Pid = sa.(*unix.SockaddrNetlink).Pid
@@ -78,7 +78,7 @@ func (c *Conn) Receive() ([]syscall.NetlinkMessage, error) {
 		// Get buffer size
 		n, _, _, _, err := unix.Recvmsg(c.FileDescr, b, nil, unix.MSG_PEEK)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "netlink get buffer size")
 		}
 
 		// Break if buffer is large enough
@@ -93,15 +93,15 @@ func (c *Conn) Receive() ([]syscall.NetlinkMessage, error) {
 	// Get all messages
 	n, _, _, from, err := unix.Recvmsg(c.FileDescr, b, nil, 0)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "netlink get all messages")
 	}
 
 	addr, ok := from.(*unix.SockaddrNetlink)
 	if !ok {
-		return nil, fmt.Errorf("expected unix.SockaddrNetlink but received different unix.Sockaddr")
+		return nil, errors.New("expected unix.SockaddrNetlink but received different unix.Sockaddr")
 	}
 	if addr.Family != unix.AF_NETLINK {
-		return nil, fmt.Errorf("received invalid netlink family")
+		return nil, errors.New("received invalid netlink family")
 	}
 
 	return syscall.ParseNetlinkMessage(b[:n])

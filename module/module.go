@@ -1,11 +1,18 @@
 package module
 
+import (
+	"encoding/hex"
+	"encoding/json"
+)
+
 type ModuleType string
 
 const (
 	TypeSff8079 = ModuleType("SFF-8079")
 	TypeSff8636 = ModuleType("SFF-8636")
 )
+
+type Bytes []byte
 
 type Module struct {
 	Type           ModuleType `json:"type"`
@@ -30,11 +37,30 @@ type Module struct {
 	VendorPn       string     `json:"vendorPn"`
 	VendorRev      string     `json:"vendorRev"`
 	LinkCodes      string     `json:"linkCodes"`
-	Options        []byte     `json:"options"`
+	Options        Bytes      `json:"options"`
 	BrMax          int        `json:"brMax"`
 	BrMin          int        `json:"brMin"`
 	VendorSn       string     `json:"vendorSn"`
 	DateCode       string     `json:"dateCode"`
-	VendorSa       byte       `json:"vendorSa"`
-	Eeprom         []byte     `json:"eeprom"`
+	VendorSa       int        `json:"vendorSa"`
+	Eeprom         Bytes      `json:"eeprom"`
+}
+
+func (b *Bytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(hex.EncodeToString(*b))
+}
+
+func (b *Bytes) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+
+	v, err := hex.DecodeString(s)
+	if err != nil {
+		return err
+	}
+	*b = v
+
+	return nil
 }

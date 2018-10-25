@@ -64,6 +64,20 @@ brokers = ["kafka1", "kafka2", "kafka3"]
 timeout = 3
 ```
 
+**rateLimit**
+: Highwater mark per interface for messages per second sent to Kafka, once reached it will send a stop event and not publish further messages until it drop's below the limit. Once it drops below the limit a resume event will be sent.
+
+```
+rateLimit = 5
+```
+
+**comprAlgo**
+: Compression algorithm used for messages none, gzip, lzw, snappy, xz or zlib.
+
+```
+comprAlgo = "snappy"
+```
+
 # EXAMPLE
 
 ```

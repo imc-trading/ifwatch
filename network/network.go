@@ -1,15 +1,14 @@
 package network
 
 import (
-	"errors"
-	"fmt"
 	"net"
 
 	"github.com/mickep76/log"
+	"github.com/pkg/errors"
+	"github.com/safchain/ethtool"
 
 	"github.com/imc-trading/ifwatch/module"
 	"github.com/imc-trading/ifwatch/netlink"
-	"github.com/safchain/ethtool"
 )
 
 // Interface provides information about system network interfaces.
@@ -62,8 +61,9 @@ func maskToDec(m net.IPMask) string {
 func ParseInterface(ni *netlink.Interface, f Flag) (*Interface, error) {
 	e, err := ethtool.NewEthtool()
 	if err != nil && err != ErrOpNotSupp {
-		return nil, fmt.Errorf("new ethtool: %v", err)
+		return nil, errors.Wrap(err, "new ethtool")
 	}
+	defer e.Close()
 
 	i := &Interface{
 		Index:  ni.Index,
@@ -88,20 +88,20 @@ func ParseInterface(ni *netlink.Interface, f Flag) (*Interface, error) {
 			if m, err := module.Decode(eeprom); err == nil {
 				i.Module = m
 			} else {
-				log.Warn(err)
+				log.Warn(errors.Wrap(err, "get eeprom module"))
 			}
 		}
 	}
 
 	addrs, err := ni.NetInterface.Addrs()
 	if err != nil {
-		return nil, fmt.Errorf("get interface address for %s: %v", ni.Name, err)
+		return nil, errors.Wrapf(err, "get interface address for %s", ni.Name)
 	}
 
 	for _, a := range addrs {
 		ip, ipNet, err := net.ParseCIDR(a.String())
 		if err != nil {
-			return nil, fmt.Errorf("parse CIDR for %s: %v", ni.Name, err)
+			return nil, errors.Wrapf(err, "parse CIDR for %s", ni.Name)
 		}
 
 		if ip.To4() != nil {

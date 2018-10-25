@@ -1,18 +1,24 @@
 package kafka
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/imc-trading/ifwatch/backend"
 
 	"github.com/Shopify/sarama"
+	"github.com/mickep76/compress"
+	_ "github.com/mickep76/compress/gzip"
+	_ "github.com/mickep76/compress/lzw"
+	_ "github.com/mickep76/compress/snappy"
+	_ "github.com/mickep76/compress/xz"
+	_ "github.com/mickep76/compress/zlib"
+	"github.com/mickep76/log"
 )
 
 type subscriber struct {
 	topic    string
+	algo     compress.Algorithm
 	handlers []backend.MessageHandler
 	wait     sync.WaitGroup
 	done     chan interface{}
@@ -20,24 +26,32 @@ type subscriber struct {
 	sarama.Consumer
 }
 
-func NewSubscriber(brokers []string, topic string) (*subscriber, error) {
-	cons, err := sarama.NewConsumer(brokers, nil)
+func NewSubscriber(brokers []string, topic string, algo string) (*subscriber, error) {
+	s := &subscriber{
+		topic: topic,
+		wait:  sync.WaitGroup{},
+		done:  make(chan interface{}),
+	}
+
+	var err error
+	if algo != "none" {
+		s.algo, err = compress.NewAlgorithm(algo)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	s.Consumer, err = sarama.NewConsumer(brokers, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	cli, err := sarama.NewClient(brokers, sarama.NewConfig())
+	s.client, err = sarama.NewClient(brokers, sarama.NewConfig())
 	if err != nil {
 		return nil, fmt.Errorf("new kafka client: %v", err)
 	}
 
-	return &subscriber{
-		topic:    topic,
-		wait:     sync.WaitGroup{},
-		done:     make(chan interface{}),
-		client:   cli,
-		Consumer: cons,
-	}, nil
+	return s, nil
 }
 
 func (s *subscriber) Backend() backend.Backend {
@@ -80,8 +94,18 @@ func (s *subscriber) Versions(k string, handler backend.MessageHandler) error {
 	defer pc.Close()
 
 	for m := range pc.Messages() {
+		var value []byte
+		if s.algo != nil {
+			value, err = s.algo.Decode(m.Value)
+			if err != nil {
+				log.Errorf("uncompress: %v", err)
+				continue
+			}
+		} else {
+			value = m.Value
+		}
 		if string(m.Key) == k {
-			handler(string(m.Key), m.Value)
+			handler(string(m.Key), value)
 		}
 		if m.Offset+1 == pc.HighWaterMarkOffset() {
 			return nil
@@ -89,10 +113,6 @@ func (s *subscriber) Versions(k string, handler backend.MessageHandler) error {
 	}
 
 	return nil
-}
-
-func (s *subscriber) Keys() ([]string, error) {
-	return nil, errors.New("not supported")
 }
 
 func (s *subscriber) Start() error {
@@ -115,11 +135,21 @@ func (s *subscriber) Start() error {
 			for {
 				select {
 				case m := <-pc.Messages():
+					var value []byte
+					if s.algo != nil {
+						value, err = s.algo.Decode(m.Value)
+						if err != nil {
+							log.Errorf("uncompress: %v", err)
+							continue
+						}
+					} else {
+						value = m.Value
+					}
 					for _, handler := range s.handlers {
-						go handler(string(m.Key), m.Value)
+						go handler(string(m.Key), value)
 					}
 				case err := <-pc.Errors():
-					log.Printf("consume message: %v", err)
+					log.Errorf("consume message: %v", err)
 				case <-s.done:
 					pc.Close()
 					break Loop

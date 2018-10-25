@@ -19,6 +19,8 @@ type Config struct {
 	Topic          string   `toml:"topic"`
 	Brokers        []string `toml:"brokers"`
 	Timeout        int      `toml:"timeout"`
+	RateLimit      int      `toml:"rateLimit"`
+	ComprAlgo      string   `toml:"comprAlgo"`
 }
 
 var codec encoding.Codec
@@ -31,6 +33,8 @@ func NewConfig() *Config {
 		Topic:          "ifwatch",
 		Brokers:        []string{"kafka1", "kafka2", "kafka3"},
 		Timeout:        3,
+		RateLimit:      5,
+		ComprAlgo:      "none",
 	}
 }
 

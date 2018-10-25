@@ -1,21 +1,22 @@
 package netlink
 
 import (
-	"fmt"
 	"syscall"
 	"unsafe"
+
+	"github.com/pkg/errors"
 )
 
 // Interfaces connect using rtnetlink and retrieve all network interfaces.
 func Interfaces() ([]Interface, error) {
 	tab, err := syscall.NetlinkRIB(syscall.RTM_GETLINK, syscall.AF_UNSPEC)
 	if err != nil {
-		return nil, fmt.Errorf("netlink rib: %v", err)
+		return nil, errors.Wrapf(err, "netlinkrib get interfaces")
 	}
 
 	msgs, err := syscall.ParseNetlinkMessage(tab)
 	if err != nil {
-		return nil, fmt.Errorf("parse netlink message: %v", err)
+		return nil, errors.Wrap(err, "netlink parse message")
 	}
 
 	var ift []Interface
@@ -27,7 +28,7 @@ func Interfaces() ([]Interface, error) {
 			ifim := (*syscall.IfInfomsg)(unsafe.Pointer(&m.Data[0]))
 			attrs, err := syscall.ParseNetlinkRouteAttr(&m)
 			if err != nil {
-				return nil, fmt.Errorf("parse netlink route attr: %v", err)
+				return nil, errors.Wrap(err, "pnetlink parse route attr")
 			}
 			ift = append(ift, *ParseNewLink(ifim, attrs))
 		}

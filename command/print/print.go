@@ -1,4 +1,4 @@
-package command
+package print
 
 import (
 	"flag"
@@ -12,6 +12,15 @@ import (
 	"github.com/imc-trading/ifwatch/config"
 	"github.com/imc-trading/ifwatch/network"
 )
+
+func inList(a string, l []string) bool {
+	for _, b := range l {
+		if a == b {
+			return true
+		}
+	}
+	return false
+}
 
 func usage(fl *flag.FlagSet) func() {
 	return func() {
@@ -44,17 +53,23 @@ func Print(c *config.Config, args []string) error {
 	}
 
 	host, _ := os.Hostname()
+	list := network.InterfaceList{}
 	for _, i := range interfaces {
 		if len(printInterfaces) != 0 && !inList(i.Name, printInterfaces) {
 			continue
 		}
 
 		if printJson {
-			b, _ := codec.Encode(i)
-			fmt.Print(string(b))
+			list = append(list, i)
 		} else {
-			fmt.Printf("\n%s%s/%s%s\n%s", color.White, host, i.Name, color.Reset, i)
+			fmt.Printf("%s%s/%s%s%s\n\n", color.White, host, i.Name, color.Reset, i)
 		}
 	}
+
+	if printJson {
+		b, _ := codec.Encode(list)
+		fmt.Print(string(b))
+	}
+
 	return nil
 }

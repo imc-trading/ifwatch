@@ -1,9 +1,10 @@
-package command
+package subscribe
 
 import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mickep76/color"
 	"github.com/mickep76/encoding"
@@ -13,6 +14,7 @@ import (
 	"github.com/imc-trading/ifwatch/backend"
 	"github.com/imc-trading/ifwatch/backend/kafka"
 	"github.com/imc-trading/ifwatch/config"
+	"github.com/imc-trading/ifwatch/event"
 )
 
 var sub backend.Subscriber
@@ -27,7 +29,7 @@ var textHandler = backend.MessageHandler(func(k string, in []byte) {
 		return
 	}
 
-	e := &Event{}
+	e := &event.Event{}
 	if err := codec.Decode(in, e); err != nil {
 		log.Errorf("decode json: %v", err)
 		return
@@ -35,21 +37,23 @@ var textHandler = backend.MessageHandler(func(k string, in []byte) {
 
 	// Skip host.
 	if printHost != "" && printHost != host {
+		log.Infof("skip event for: %s/%s (%s) not matching host: %s", e.Host, e.Interface.Name, e.Action, printHost)
 		return
 	}
 
 	// Skip interface.
 	if len(printInterfaces) > 0 && !inList(e.Interface.Name, printInterfaces) {
+		log.Infof("skip event for: %s/%s (%s) not matching interface(s): %s", e.Host, e.Interface.Name, e.Action, strings.Join(printInterfaces, ","))
 		return
 	}
 
 	switch e.Action {
-	case ActionAdd:
-		fmt.Printf("\n%s%s/%s%s %s(added)%s%s\n", color.White, e.Host, e.Name, color.Reset, color.Green, color.Reset, e.Interface)
-	case ActionModify:
-		fmt.Printf("\n%s%s/%s%s %s(modified)%s%s\n", color.White, e.Host, e.Name, color.Reset, color.Yellow, color.Reset, e.Interface)
-	case ActionDelete:
-		fmt.Printf("\n%s%s/%s%s %s(deleted)%s%s\n", color.White, e.Host, e.Name, color.Reset, color.Red, color.Reset, e.Interface)
+	case event.ActionAdd:
+		fmt.Printf("%s%s/%s%s %s(added)%s%s\n\n", color.White, e.Host, e.Name, color.Reset, color.Green, color.Reset, e.Interface)
+	case event.ActionModify:
+		fmt.Printf("%s%s/%s%s %s(modified)%s%s\n\n", color.White, e.Host, e.Name, color.Reset, color.Yellow, color.Reset, e.Interface)
+	case event.ActionDelete:
+		fmt.Printf("%s%s/%s%s %s(deleted)%s%s\n\n", color.White, e.Host, e.Name, color.Reset, color.Red, color.Reset, e.Interface)
 	}
 })
 
@@ -60,7 +64,7 @@ var jsonHandler = backend.MessageHandler(func(k string, in []byte) {
 		return
 	}
 
-	e := &Event{}
+	e := &event.Event{}
 	if err := codec.Decode(in, e); err != nil {
 		log.Errorf("decode json: %v", err)
 		return
@@ -68,11 +72,13 @@ var jsonHandler = backend.MessageHandler(func(k string, in []byte) {
 
 	// Skip host.
 	if printHost != "" && printHost != host {
+		log.Infof("skip event for: %s/%s (%s) not matching host: %s", e.Host, e.Interface.Name, e.Action, printHost)
 		return
 	}
 
 	// Skip interface.
-	if !inList(e.Interface.Name, printInterfaces) {
+	if len(printInterfaces) > 0 && !inList(e.Interface.Name, printInterfaces) {
+		log.Infof("skip event for: %s/%s (%s) not matching interface(s): %s", e.Host, e.Interface.Name, e.Action, strings.Join(printInterfaces, ","))
 		return
 	}
 
@@ -85,6 +91,22 @@ var jsonHandler = backend.MessageHandler(func(k string, in []byte) {
 	fmt.Print(string(out))
 })
 
+func usage(fl *flag.FlagSet) func() {
+	return func() {
+		fmt.Fprintf(os.Stderr, "Usage: ifwatch subscribe [OPTIONS] [INTERFACE...]\n\nOptions:\n")
+		fl.PrintDefaults()
+	}
+}
+
+func inList(a string, l []string) bool {
+	for _, b := range l {
+		if a == b {
+			return true
+		}
+	}
+	return false
+}
+
 func Subscribe(c *config.Config, args []string) error {
 	fl := flag.NewFlagSet("", flag.ExitOnError)
 	fl.Usage = usage(fl)
@@ -96,12 +118,10 @@ func Subscribe(c *config.Config, args []string) error {
 	fl.StringVar(&printHost, "host", "", "Host.")
 	fl.Parse(args)
 
-	if len(fl.Args()) > 0 {
-		printInterfaces = fl.Args()
-	}
+	printInterfaces = fl.Args()
 
 	var err error
-	if sub, err = kafka.NewSubscriber(c.Brokers, c.Topic); err != nil {
+	if sub, err = kafka.NewSubscriber(c.Brokers, c.Topic, c.ComprAlgo); err != nil {
 		log.Fatal(err)
 	}
 

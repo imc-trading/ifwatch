@@ -56,13 +56,11 @@ mkdir -p %{buildroot}/usr/sbin
 mkdir -p %{buildroot}/usr/share/man/{man1,man5}
 mkdir -p %{buildroot}/usr/share/%{name}
 mkdir -p %{buildroot}/etc/systemd/system
-mkdir -p %{buildroot}/etc/sysconfig
 
 cp %{name} %{buildroot}/usr/sbin/
 cp %{name}.toml.5.gz %{buildroot}/usr/share/man/man5/
 cp %{name}.1.gz %{buildroot}/usr/share/man/man1/
 cp rpm/%{name}.service %{buildroot}/etc/systemd/system/%{name}.service
-cp rpm/%{name}.sysconfig %{buildroot}/etc/sysconfig/%{name}
 cp rpm/%{name}.toml %{buildroot}/etc/
 cp LICENSE %{buildroot}/usr/share/%{name}/
 
@@ -90,7 +88,6 @@ fi
 %defattr(-,root,root)
 /usr/sbin/%{name}
 /etc/systemd/system/%{name}.service
-%config(noreplace) /etc/sysconfig/%{name}
 %config(noreplace) /etc/%{name}.toml
 /usr/share/man/man1/%{name}.1.gz
 /usr/share/man/man5/%{name}.toml.5.gz

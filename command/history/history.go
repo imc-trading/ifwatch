@@ -1,4 +1,4 @@
-package command
+package history
 
 import (
 	"encoding/json"
@@ -8,18 +8,19 @@ import (
 	"strings"
 
 	"github.com/mickep76/color"
-	"github.com/mickep76/go-difflib/difflib"
 	"github.com/mickep76/log"
+	"gitlab.trading.imc.intra/go/go-difflib/difflib"
 
 	"github.com/imc-trading/ifwatch/backend"
 	"github.com/imc-trading/ifwatch/backend/kafka"
 	"github.com/imc-trading/ifwatch/config"
+	"github.com/imc-trading/ifwatch/event"
 )
 
-var eventList []*Event
+var eventList []*event.Event
 
 var eventListHandler = backend.MessageHandler(func(k string, b []byte) {
-	e := &Event{}
+	e := &event.Event{}
 	if err := json.Unmarshal(b, e); err != nil {
 		log.Errorf("unmarshal: %v", err)
 		return
@@ -27,29 +28,45 @@ var eventListHandler = backend.MessageHandler(func(k string, b []byte) {
 	eventList = append(eventList, e)
 })
 
+func inList(a string, l []string) bool {
+	for _, b := range l {
+		if a == b {
+			return true
+		}
+	}
+	return false
+}
+
+func usage(fl *flag.FlagSet) func() {
+	return func() {
+		fmt.Fprintf(os.Stderr, "Usage: ifwatch history [OPTIONS] [INTERFACE...]\n\nOptions:\n")
+		fl.PrintDefaults()
+	}
+}
+
 func History(c *config.Config, args []string) error {
 	fl := flag.NewFlagSet("", flag.ExitOnError)
 	fl.Usage = usage(fl)
 
-	host, _ = os.Hostname()
+	host, _ := os.Hostname()
 
 	var printJson bool
+	var printHost string
 	fl.BoolVar(&printJson, "json", false, "Print as JSON.")
 	fl.StringVar(&printHost, "host", host, "Host.")
 	fl.Parse(args)
 
-	if len(fl.Args()) > 0 {
-		printInterfaces = fl.Args()
-	}
+	printInterfaces := fl.Args()
 
 	var err error
-	if sub, err = kafka.NewSubscriber(c.Brokers, c.Topic); err != nil {
+	sub, err := kafka.NewSubscriber(c.Brokers, c.Topic, c.ComprAlgo)
+	if err != nil {
 		return err
 	}
 
 	sub.Versions(printHost, eventListHandler)
 
-	events := make(map[string][]*Event)
+	events := make(map[string][]*event.Event)
 	for _, e := range eventList {
 		// Skip host.
 		if printHost != "" && printHost != host {
@@ -63,7 +80,7 @@ func History(c *config.Config, args []string) error {
 
 		k := e.Host + "/" + e.Name
 		if _, ok := events[k]; !ok {
-			events[k] = []*Event{}
+			events[k] = []*event.Event{}
 		}
 		events[k] = append(events[k], e)
 	}
@@ -78,9 +95,9 @@ func History(c *config.Config, args []string) error {
 	}
 
 	for key, list := range events {
-		fmt.Printf("\n%s%s%s\n│\n", color.White, key, color.Reset)
+		fmt.Printf("%s%s%s\n│\n", color.White, key, color.Reset)
 
-		var prev *Event
+		var prev *event.Event
 		for i, e := range list {
 			itmPad := "├── "
 			txtPad := "│   "
@@ -90,12 +107,12 @@ func History(c *config.Config, args []string) error {
 			}
 
 			switch e.Action {
-			case ActionAdd:
+			case event.ActionAdd:
 				fmt.Printf("%s%s%s%s %s(added)%s\n", itmPad, color.Blue, e.Created.Format("2006-01-02 15:04:05"), color.Reset, color.Green, color.Reset)
 				for _, l := range strings.Split(strings.Trim(e.Interface.String(), "\n"), "\n") {
 					fmt.Printf("%s%s\n", txtPad, l)
 				}
-			case ActionModify:
+			case event.ActionModify:
 				fmt.Printf("%s%s%s%s %s(modified)%s\n", itmPad, color.Blue, e.Created.Format("2006-01-02 15:04:05"), color.Reset, color.Yellow, color.Reset)
 				if prev != nil {
 					diff := difflib.UnifiedDiff{
@@ -113,11 +130,13 @@ func History(c *config.Config, args []string) error {
 						fmt.Printf("%s%s\n", txtPad, l)
 					}
 				}
-			case ActionDelete:
+			case event.ActionDelete:
 				fmt.Printf("%s%s%s%s %s(deleted)%s\n", itmPad, color.Blue, e.Created.Format("2006-01-02 15:04:05"), color.Reset, color.Red, color.Reset)
 			}
 			prev = e
 		}
+
+		fmt.Println()
 	}
 	return nil
 }

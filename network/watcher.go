@@ -1,10 +1,10 @@
 package network
 
 import (
-	"fmt"
-	"log"
 	"syscall"
 	"unsafe"
+
+	"github.com/pkg/errors"
 
 	"github.com/imc-trading/ifwatch/netlink"
 )
@@ -55,7 +55,8 @@ func (w *Watcher) Start() error {
 	for {
 		msgs, err := conn.Receive()
 		if err != nil {
-			log.Fatal(err)
+			//			log.Fatal(err)
+			return errors.Wrap(err, "conn receive")
 		}
 
 		for _, m := range msgs {
@@ -66,7 +67,7 @@ func (w *Watcher) Start() error {
 				ifim := (*syscall.IfInfomsg)(unsafe.Pointer(&m.Data[0]))
 				attrs, err := syscall.ParseNetlinkRouteAttr(&m)
 				if err != nil {
-					return fmt.Errorf("parse netlink route attr: %v", err)
+					return errors.Wrap(err, "parse netlink route attr")
 				}
 
 				ni := netlink.ParseNewLink(ifim, attrs)
@@ -82,7 +83,7 @@ func (w *Watcher) Start() error {
 				ifim := (*syscall.IfInfomsg)(unsafe.Pointer(&m.Data[0]))
 				attrs, err := syscall.ParseNetlinkRouteAttr(&m)
 				if err != nil {
-					return fmt.Errorf("parse netlink route attr: %v", err)
+					return errors.Wrap(err, "parse netlink route attr")
 				}
 
 				ni := netlink.ParseNewLink(ifim, attrs)
