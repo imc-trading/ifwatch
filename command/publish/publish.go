@@ -88,8 +88,6 @@ func eventHandler(i *network.Interface, f network.Flag) {
 		e.Action = event.ActionDelete
 	} else {
 		v, _ := rates[i.Name]
-		log.Errorf("h1: h2:", newHash, v.Hash)
-		log.Errorf("v: %+v", i.Flags)
 		if v.Count == 0 {
 			e.Action = event.ActionAdd
 		} else if newHash == v.Hash {
