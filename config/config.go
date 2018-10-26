@@ -21,6 +21,7 @@ type Config struct {
 	Timeout        int      `toml:"timeout"`
 	RateLimit      int      `toml:"rateLimit"`
 	ComprAlgo      string   `toml:"comprAlgo"`
+	Refresh        int      `toml:"refresh"`
 }
 
 var codec encoding.Codec
@@ -35,6 +36,7 @@ func NewConfig() *Config {
 		Timeout:        3,
 		RateLimit:      5,
 		ComprAlgo:      "none",
+		Refresh:        24,
 	}
 }
 

@@ -53,3 +53,8 @@ logNoDate = true
 # Values: none, gzip, lzw, snappy, xz, zlib
 #
 # comprAlgo = "snappy"
+
+# refresh
+# Refresh entries in Kafka for caching every x hours, where 0 is no refresh.
+#
+# refresh = 24

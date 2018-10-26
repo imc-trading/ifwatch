@@ -78,6 +78,13 @@ rateLimit = 5
 comprAlgo = "snappy"
 ```
 
+**refresh**
+: Refresh entries in Kafka for caching every x hours, where 0 is no refresh.
+
+```
+refresh = 24
+```
+
 # EXAMPLE
 
 ```

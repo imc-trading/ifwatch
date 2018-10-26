@@ -11,6 +11,7 @@ type EventType string
 const (
 	ActionAdd         = EventType("add")
 	ActionModify      = EventType("modify")
+	ActionRefresh     = EventType("refresh")
 	ActionDelete      = EventType("delete")
 	ActionLimitStop   = EventType("limit-stop")
 	ActionLimitResume = EventType("limit-resume")
