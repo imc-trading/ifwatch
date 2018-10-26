@@ -157,8 +157,7 @@ func Publish(c *config.Config, args []string) error {
 	if c.Refresh > 0 {
 		go func() {
 			for {
-				//				time.Sleep(time.Duration(c.Refresh) * time.Hour)
-				time.Sleep(time.Duration(c.Refresh) * time.Second)
+				time.Sleep(time.Duration(c.Refresh) * time.Hour)
 				if err := refresh(); err != nil {
 					log.Error(err)
 				}
